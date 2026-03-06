@@ -4,23 +4,18 @@ import google.generativeai as genai
 from PIL import Image
 
 # --- SECURE API KEY SETUP ---
-# We check if we are on the cloud or local
 try:
-    # This looks for a secret named "GOOGLE_API_KEY"
-    # It does NOT contain the actual key itself.
     api_key = st.secrets["GOOGLE_API_KEY"]
 except:
-    # If running locally without secrets, we stop to prevent errors
-    # This is safe because it doesn't hardcode anything.
     st.error("⚠️ Google API Key not found. Please set it in Streamlit Secrets.")
     st.stop()
 
 genai.configure(api_key=api_key)
 
 # Set up the page layout
-st.set_page_config(page_title="Scamino", page_icon="🛡️", layout="centered")
+st.set_page_config(page_title="Scamina", page_icon="🛡️", layout="centered")
 
-# --- CUSTOM CSS FOR "CLEAN" LOOK ---
+# --- CUSTOM CSS ---
 st.markdown("""
     <style>
     .big-font { font-size:20px !important; font-weight: bold; }
@@ -31,11 +26,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- HEADER ---
-st.title("🛡️ Scamino")
+st.title("🛡️ Scamina")
 st.caption("Global Scam & Phishing Detector")
 
 # --- SIDEBAR ---
-st.sidebar.title("About Scamino")
+st.sidebar.title("About Scamina")
 st.sidebar.info("We use advanced pattern recognition to detect financial traps, phishing, and fake offers in seconds.")
 
 # --- TABS ---
@@ -43,11 +38,9 @@ tab1, tab2 = st.tabs(["💬 Analyze Text", "🖼️ Analyze Screenshot"])
 
 # === HELPER FUNCTION: PARSE AI RESPONSE ===
 def analyze_content(content, type="text"):
-    # Use the correct standard model names
-    model_name = 'gemini-1.5-flash'
-    model = genai.GenerativeModel(model_name)
+    # gemini-1.5-flash is great for both text and images
+    model = genai.GenerativeModel('gemini-1.5-flash')
     
-    # We ask for a very strict format
     prompt = f"""
     Act as a security expert. Analyze this {type} strictly.
     Input: {content}
@@ -59,14 +52,13 @@ def analyze_content(content, type="text"):
     Line 4: RED_FLAGS (List 3 distinct flaws separated by commas, e.g., Bad Grammar, Urgency, Suspicious Link)
     """
     
-    try:
-        if type == "image":
-            response = model.generate_content([prompt, content])
-        else:
-            response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return ""
+    # Notice: No try/except here anymore. We want the error to bubble up so you can see it!
+    if type == "image":
+        response = model.generate_content([prompt, content])
+    else:
+        response = model.generate_content(prompt)
+        
+    return response.text
 
 # === TAB 1: TEXT ===
 with tab1:
@@ -108,10 +100,12 @@ with tab1:
                             st.markdown(f"- {flag.strip()}")
                             
                     else:
-                        st.error("Could not analyze. Please try again.")
+                        st.error("Could not parse the AI's response properly. Please try again.")
+                        st.write("Raw AI Output:", result) # Shows what the AI actually said if it failed to format
                         
                 except Exception as e:
-                    st.error(f"Connection Error: {e}")
+                    # This will catch API Key errors, quota limits, etc.
+                    st.error(f"Google AI Error: {e}")
 
 # === TAB 2: IMAGE ===
 with tab2:
@@ -119,7 +113,8 @@ with tab2:
     
     if uploaded_file:
         image = Image.open(uploaded_file)
-        st.image(image, caption='Uploaded Image', use_container_width=True)
+        # THE FIX: use_container_width has been replaced with width='stretch'
+        st.image(image, caption='Uploaded Image', width='stretch')
         
         if st.button("Scan Screenshot", type="primary"):
             with st.spinner("Analyzing visuals..."):
@@ -149,5 +144,9 @@ with tab2:
                         for flag in flags:
                             st.markdown(f"- {flag.strip()}")
                             
+                    else:
+                        st.error("Could not parse the AI's response properly. Please try again.")
+                        st.write("Raw AI Output:", result)
+                        
                 except Exception as e:
-                    st.error(f"Error: {e}")
+                    st.error(f"Google AI Error: {e}")
