@@ -13,7 +13,7 @@ except:
 genai.configure(api_key=api_key)
 
 # Set up the page layout
-st.set_page_config(page_title="Scamina", page_icon="🛡️", layout="centered")
+st.set_page_config(page_title="Scamino", page_icon="🛡️", layout="centered")
 
 # --- CUSTOM CSS ---
 st.markdown("""
@@ -26,11 +26,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- HEADER ---
-st.title("🛡️ Scamina")
+st.title("🛡️ Scamino")
 st.caption("Global Scam & Phishing Detector")
 
 # --- SIDEBAR ---
-st.sidebar.title("About Scamina")
+st.sidebar.title("About Scamino")
 st.sidebar.info("We use advanced pattern recognition to detect financial traps, phishing, and fake offers in seconds.")
 
 # --- TABS ---
@@ -150,3 +150,4 @@ with tab2:
                         
                 except Exception as e:
                     st.error(f"Google AI Error: {e}")
+
