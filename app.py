@@ -83,8 +83,6 @@ st.markdown('<div class="app-title">Scamino</div>', unsafe_allow_html=True)
 st.markdown('<div class="app-subtitle">Smarter Threat Detection. Safer Inbox.</div>', unsafe_allow_html=True)
 
 # --- TABS ---
-# Using standard markdown for cleaner navigation instead of bulky Streamlit tabs if desired, 
-# but Streamlit tabs are best for strict mobile layouts.
 tab1, tab2 = st.tabs(["Analyze Text", "Analyze Image"])
 
 # === AI PARSER ===
@@ -111,7 +109,7 @@ def analyze_content(content, type="text"):
         
     return response.text
 
-# === MODERN RENDER ENGINE ===
+# === MODERN RENDER ENGINE (Fixed Indentation) ===
 def render_app_card(result):
     lines = result.split('\n')
     lines = [l.replace('**', '').strip() for l in lines if l.strip()] # Sanitize output
@@ -126,37 +124,32 @@ def render_app_card(result):
 
         risk_class = "High" if "High" in risk else "Medium" if "Medium" in risk else "Low"
         
-        # Build the HTML Card
-        html_card = f"""
-        <div class="result-card">
-            <div class="badge-container">
-                <span class="badge badge-{risk_class}">{risk} RISK</span>
-                <span class="badge badge-threat">{threat}</span>
-            </div>
-            
-            <div class="section-title">Analysis</div>
-            <div class="hook-text">{hook}</div>
-        """
+        # We push the HTML flush left so Streamlit doesn't turn it into a code block!
+        html_card = f"""<div class="result-card">
+<div class="badge-container">
+<span class="badge badge-{risk_class}">{risk} RISK</span>
+<span class="badge badge-threat">{threat}</span>
+</div>
+<div class="section-title">Analysis</div>
+<div class="hook-text">{hook}</div>
+"""
         
         # Inject Defanged Link if found
         if links.lower() not in ["none found", "none"]:
-            html_card += f"""
-            <div class="section-title">Suspicious Destination Detected</div>
-            <div class="link-terminal">{links}</div>
-            """
+            html_card += f"""<div class="section-title">Suspicious Destination Detected</div>
+<div class="link-terminal">{links}</div>
+"""
             
-        # Action Step
-        html_card += f"""
-            <div class="section-title">Next Step</div>
-            <div class="action-box">
-                <p class="action-text">{action}</p>
-            </div>
-            
-            <div class="section-title">Evidence Found</div>
-            <ul style="color: #475569; font-size: 0.95rem; padding-left: 1.2rem; margin-top: 0.5rem;">
-        """
+        # Action Step & Evidence
+        html_card += f"""<div class="section-title">Next Step</div>
+<div class="action-box">
+<p class="action-text">{action}</p>
+</div>
+<div class="section-title">Evidence Found</div>
+<ul style="color: #475569; font-size: 0.95rem; padding-left: 1.2rem; margin-top: 0.5rem;">
+"""
         for flag in flags:
-            html_card += f"<li>{flag.strip()}</li>"
+            html_card += f"<li>{flag.strip()}</li>\n"
             
         html_card += "</ul></div>"
         
@@ -170,6 +163,8 @@ def render_app_card(result):
             
     else:
         st.error("Could not process request. Please try again.")
+        with st.expander("Raw AI Output"):
+            st.write(result)
 
 # === TAB 1: TEXT ===
 with tab1:
