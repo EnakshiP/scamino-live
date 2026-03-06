@@ -39,7 +39,7 @@ tab1, tab2 = st.tabs(["💬 Analyze Text", "🖼️ Analyze Screenshot"])
 # === HELPER FUNCTION: PARSE AI RESPONSE ===
 def analyze_content(content, type="text"):
     # gemini-1.5-flash is great for both text and images
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     
     prompt = f"""
     Act as a security expert. Analyze this {type} strictly.
