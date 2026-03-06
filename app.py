@@ -112,7 +112,7 @@ def analyze_content(content, type="text"):
 # === MODERN RENDER ENGINE (Fixed Indentation) ===
 def render_app_card(result):
     lines = result.split('\n')
-    lines = [l.replace('**', '').strip() for l in lines if l.strip()] # Sanitize output
+    lines = [l.replace('**', '').strip() for l in lines if l.strip()] 
     
     if len(lines) >= 6:
         risk = lines[0].replace("Line 1:", "").strip()
@@ -124,7 +124,6 @@ def render_app_card(result):
 
         risk_class = "High" if "High" in risk else "Medium" if "Medium" in risk else "Low"
         
-        # We push the HTML flush left so Streamlit doesn't turn it into a code block!
         html_card = f"""<div class="result-card">
 <div class="badge-container">
 <span class="badge badge-{risk_class}">{risk} RISK</span>
@@ -134,13 +133,11 @@ def render_app_card(result):
 <div class="hook-text">{hook}</div>
 """
         
-        # Inject Defanged Link if found
         if links.lower() not in ["none found", "none"]:
             html_card += f"""<div class="section-title">Suspicious Destination Detected</div>
 <div class="link-terminal">{links}</div>
 """
             
-        # Action Step & Evidence
         html_card += f"""<div class="section-title">Next Step</div>
 <div class="action-box">
 <p class="action-text">{action}</p>
@@ -153,10 +150,8 @@ def render_app_card(result):
             
         html_card += "</ul></div>"
         
-        # Render the complete card
         st.markdown(html_card, unsafe_allow_html=True)
         
-        # Save to History
         st.session_state.scan_history.insert(0, {"threat": threat, "risk": risk, "hook": hook})
         if len(st.session_state.scan_history) > 3:
             st.session_state.scan_history.pop()
@@ -168,20 +163,26 @@ def render_app_card(result):
 
 # === TAB 1: TEXT ===
 with tab1:
-    st.markdown('<p style="font-size: 0.85rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Quick Test</p>', unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Fake Delivery"):
-            set_example("USPS: Your package is on hold due to a missing street number. Please update your info here: http://usps-tracking-update-hub.com")
-    with col2:
-        if st.button("Bank Alert"):
-            set_example("CHASE BANK: Your account #8892 has been locked. Verify identity at https://chase-secure-auth.net.")
+    # 1. HIDE DEMOS IN AN EXPANDER SO IT'S CLEAR THEY ARE JUST EXAMPLES
+    with st.expander("💡 Don't have a suspicious message? Try a demo"):
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("📦 Load Fake Delivery Demo"):
+                set_example("USPS: Your package is on hold due to a missing street number. Please update your info here: http://usps-tracking-update-hub.com")
+        with col2:
+            if st.button("🏦 Load Bank Alert Demo"):
+                set_example("CHASE BANK: Your account #8892 has been locked. Verify identity at https://chase-secure-auth.net.")
+        
+        if st.button("🧹 Clear Box", use_container_width=True):
+            set_example("")
             
+    # 2. CLEAR INSTRUCTIONS FOR THE USER'S OWN TEXT
+    st.markdown('<p style="font-size: 0.85rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; margin-top: 1rem;">Analyze Your Message</p>', unsafe_allow_html=True)
     text_input = st.text_area(
-        "", 
+        "Paste your suspicious text, email, or URL here:", 
         value=st.session_state.sample_text,
         height=140, 
-        placeholder="Paste text, email, or URL here...",
+        placeholder="Paste your text here...",
         label_visibility="collapsed"
     )
     
@@ -197,11 +198,15 @@ with tab1:
 # === TAB 2: IMAGE ===
 with tab2:
     st.markdown('<p style="font-size: 0.85rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Upload Screenshot</p>', unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("", type=["jpg", "png", "jpeg"], label_visibility="collapsed")
+    uploaded_file = st.file_uploader("Upload an image file", type=["jpg", "png", "jpeg"], label_visibility="collapsed")
     
     if uploaded_file:
         image = Image.open(uploaded_file)
-        st.image(image, width='stretch', use_container_width=True)
+        
+        # 3. SHRINK THE IMAGE BY WRAPPING IT IN A CENTERED COLUMN
+        col_spacer1, col_img, col_spacer2 = st.columns([1, 2, 1])
+        with col_img:
+            st.image(image, caption='Image Preview', use_container_width=True)
         
         if st.button("Scan Image", use_container_width=True):
             with st.spinner("Analyzing visuals..."):
